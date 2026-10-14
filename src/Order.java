@@ -4,24 +4,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * A service order.
- * The order itself controls its life cycle and business rules,
- * so the status changes only through domain methods (diagnose, approve, start, ...).
- */
-public class ServiceOrder {
+
+public class Order {
 
     private final long id;
     private final Car car;
-    private final List<ServiceJob> jobs = new ArrayList<>();
+    private final List<Job> jobs = new ArrayList<>();
     private Mechanic mechanic;
     private OrderStatus status;
 
-    /**
-     * The constructor is package-private: orders are created by Service,
-     * which checks that the car is registered.
-     */
-    ServiceOrder(long id, Car car) {
+
+    Order(long id, Car car) {
         this.id = id;
         this.car = Validation.requireNonNull(car, "Car");
         this.status = OrderStatus.CREATED;
@@ -43,14 +36,12 @@ public class ServiceOrder {
         return status;
     }
 
-    /**
-     * Returns a read-only list of jobs, so the order rules cannot be bypassed from outside.
-     */
-    public List<ServiceJob> getJobs() {
+
+    public List<Job> getJobs() {
         return Collections.unmodifiableList(jobs);
     }
 
-    public void addJob(ServiceJob job) {
+    public void addJob(Job job) {
         Validation.requireNonNull(job, "Job");
         ensureNotClosed();
         if (status != OrderStatus.CREATED && status != OrderStatus.DIAGNOSED) {
@@ -107,7 +98,7 @@ public class ServiceOrder {
     public void complete() {
         ensureNotClosed();
         boolean allDone = jobs.stream()
-                .allMatch(ServiceJob::isDone);
+                .allMatch(Job::isDone);
         if (!allDone) {
             throw new IllegalStateException("Cannot complete order #" + id + ": some jobs are not done");
         }
@@ -122,7 +113,7 @@ public class ServiceOrder {
 
     public BigDecimal getTotalCost() {
         return jobs.stream()
-                .map(ServiceJob::getTotalCost)
+                .map(Job::getTotalCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -155,10 +146,10 @@ public class ServiceOrder {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ServiceOrder)) {
+        if (!(o instanceof Order)) {
             return false;
         }
-        ServiceOrder other = (ServiceOrder) o;
+        Order other = (Order) o;
         return id == other.id;
     }
 

@@ -1,8 +1,6 @@
 import java.util.Objects;
 
-/**
- * A customer of the car service.
- */
+
 public class Customer {
 
     private final long id;

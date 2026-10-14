@@ -1,9 +1,7 @@
 import java.time.Year;
 import java.util.Objects;
 
-/**
- * A car. It is uniquely identified by its VIN, so the VIN never changes.
- */
+
 public class Car {
 
     private static final int FIRST_CAR_YEAR = 1886;

@@ -1,15 +1,12 @@
 import java.util.Objects;
 
-/**
- * A mechanic of the car service.
- * A mechanic can work on at most one active order at a time.
- */
+
 public class Mechanic {
 
     private final long id;
     private String fullName;
     private String specialization;
-    private ServiceOrder currentOrder;
+    private Order currentOrder;
 
     public Mechanic(long id, String fullName, String specialization) {
         this.id = id;
@@ -42,9 +39,9 @@ public class Mechanic {
     }
 
     /**
-     * Assigns the mechanic to an order. Called only from ServiceOrder.
+     * Assigns the mechanic to an order. Called only from Order.
      */
-    void occupy(ServiceOrder order) {
+    void occupy(Order order) {
         if (isBusy()) {
             throw new IllegalStateException("Mechanic " + fullName
                     + " is already working on order #" + currentOrder.getId());

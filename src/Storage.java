@@ -8,19 +8,19 @@ import java.util.Map;
  * The car service: stores registered customers, cars, mechanics and orders
  * and creates new objects with unique identifiers.
  */
-public class Service {
+public class Storage {
 
     private String name;
     private final List<Customer> customers = new ArrayList<>();
     private final Map<String, Car> carsByVin = new HashMap<>();
     private final List<Mechanic> mechanics = new ArrayList<>();
-    private final List<ServiceOrder> orders = new ArrayList<>();
+    private final List<Order> orders = new ArrayList<>();
 
     private long nextCustomerId = 1;
     private long nextMechanicId = 1;
     private long nextOrderId = 1;
 
-    public Service(String name) {
+    public Storage(String name) {
         setName(name);
     }
 
@@ -58,12 +58,12 @@ public class Service {
         return mechanic;
     }
 
-    public ServiceOrder createOrder(Car car) {
+    public Order createOrder(Car car) {
         Validation.requireNonNull(car, "Car");
         if (!car.equals(carsByVin.get(car.getVin()))) {
             throw new IllegalArgumentException("Car " + car.getVin() + " is not registered in the service");
         }
-        ServiceOrder order = new ServiceOrder(nextOrderId, car);
+        Order order = new Order(nextOrderId, car);
         nextOrderId++;
         orders.add(order);
         return order;
@@ -81,7 +81,7 @@ public class Service {
         return Collections.unmodifiableList(mechanics);
     }
 
-    public List<ServiceOrder> getOrders() {
+    public List<Order> getOrders() {
         return Collections.unmodifiableList(orders);
     }
 }

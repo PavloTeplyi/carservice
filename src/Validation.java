@@ -1,9 +1,6 @@
 import java.math.BigDecimal;
 
-/**
- * Common input checks.
- * This is a utility class, so it cannot be instantiated.
- */
+
 final class Validation {
 
     private Validation() {

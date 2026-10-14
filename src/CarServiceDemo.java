@@ -6,12 +6,12 @@ import java.math.BigDecimal;
 public class CarServiceDemo {
 
     public static void main(String[] args) {
-        Service service = new Service("AutoMaster");
+        Storage storage = new Storage("AutoMaster");
 
         printHeader("1. Registering a customer and a car");
-        Customer customer = service.registerCustomer("Ivan Petrenko", "+380671234567");
-        Car car = service.registerCar("WVWZZZ1JZXW000001", "Volkswagen", "Golf", 2015, customer);
-        Car secondCar = service.registerCar("JTDBR32E720000002", "Toyota", "Corolla", 2019, customer);
+        Customer customer = storage.registerCustomer("Ivan Petrenko", "+380671234567");
+        Car car = storage.registerCar("WVWZZZ1JZXW000001", "Volkswagen", "Golf", 2015, customer);
+        Car secondCar = storage.registerCar("JTDBR32E720000002", "Toyota", "Corolla", 2019, customer);
         System.out.println("Customer: " + customer);
         System.out.println("Car: " + car);
         System.out.println("Car: " + secondCar);
@@ -19,19 +19,19 @@ public class CarServiceDemo {
         customer.setPhone("+380509876543");
         System.out.println("Customer phone changed: " + customer);
 
-        Mechanic oleh = service.hireMechanic("Oleh Koval", "engine");
-        Mechanic andrii = service.hireMechanic("Andrii Melnyk", "suspension");
+        Mechanic oleh = storage.hireMechanic("Oleh Koval", "engine");
+        Mechanic andrii = storage.hireMechanic("Andrii Melnyk", "suspension");
         System.out.println("Mechanics: " + oleh + ", " + andrii);
 
         expectError("Registering the same VIN again",
-                () -> service.registerCar("WVWZZZ1JZXW000001", "Skoda", "Octavia", 2018, customer));
+                () -> storage.registerCar("WVWZZZ1JZXW000001", "Skoda", "Octavia", 2018, customer));
 
         printHeader("2. Full order life cycle");
-        ServiceOrder order = service.createOrder(car);
+        Order order = storage.createOrder(car);
         printState(order);
 
-        order.addJob(new ServiceJob("Oil change", new BigDecimal("1200.00"), new BigDecimal("400.00")));
-        order.addJob(new ServiceJob("Brake pad replacement", new BigDecimal("1800.50"), new BigDecimal("650.00")));
+        order.addJob(new Job("Oil change", new BigDecimal("1200.00"), new BigDecimal("400.00")));
+        order.addJob(new Job("Brake pad replacement", new BigDecimal("1800.50"), new BigDecimal("650.00")));
         System.out.println("Added two jobs");
         printState(order);
 
@@ -50,7 +50,7 @@ public class CarServiceDemo {
 
         order.completeJob(0);
         order.completeJob(1);
-        for (ServiceJob job : order.getJobs()) {
+        for (Job job : order.getJobs()) {
             System.out.println("  - " + job);
         }
 
@@ -61,14 +61,14 @@ public class CarServiceDemo {
         System.out.println("Amount due for order #" + order.getId() + ": " + order.getTotalCost() + " UAH");
 
         printHeader("4. Trying to approve an empty order");
-        ServiceOrder emptyOrder = service.createOrder(secondCar);
+        Order emptyOrder = storage.createOrder(secondCar);
         emptyOrder.diagnose();
         expectError("Approving an order without jobs", emptyOrder::approve);
         printState(emptyOrder);
 
         printHeader("5. Trying to start an order without a mechanic");
-        ServiceOrder noMechanicOrder = service.createOrder(secondCar);
-        noMechanicOrder.addJob(new ServiceJob("Wheel alignment", BigDecimal.ZERO, new BigDecimal("700.00")));
+        Order noMechanicOrder = storage.createOrder(secondCar);
+        noMechanicOrder.addJob(new Job("Wheel alignment", BigDecimal.ZERO, new BigDecimal("700.00")));
         noMechanicOrder.diagnose();
         noMechanicOrder.approve();
         expectError("Starting without a mechanic", noMechanicOrder::start);
@@ -83,12 +83,12 @@ public class CarServiceDemo {
 
         printHeader("7. Trying to change a completed order");
         expectError("Adding a job to a completed order",
-                () -> order.addJob(new ServiceJob("Car wash", BigDecimal.ZERO, new BigDecimal("200.00"))));
+                () -> order.addJob(new Job("Car wash", BigDecimal.ZERO, new BigDecimal("200.00"))));
         expectError("Cancelling a completed order", order::cancel);
         printState(order);
 
         printHeader("8. Trying a forbidden status transition");
-        ServiceOrder newOrder = service.createOrder(car);
+        Order newOrder = storage.createOrder(car);
         expectError("Completing a just created order", newOrder::complete);
         printState(newOrder);
 
@@ -100,8 +100,8 @@ public class CarServiceDemo {
         System.out.println("Andrii assigned to order #" + emptyOrder.getId());
         printState(emptyOrder);
 
-        printHeader("All orders of service \"" + service.getName() + "\"");
-        for (ServiceOrder o : service.getOrders()) {
+        printHeader("All orders of service \"" + storage.getName() + "\"");
+        for (Order o : storage.getOrders()) {
             System.out.println(o);
         }
     }
@@ -116,7 +116,7 @@ public class CarServiceDemo {
         }
     }
 
-    private static void printState(ServiceOrder order) {
+    private static void printState(Order order) {
         System.out.println("  -> " + order);
     }
 
