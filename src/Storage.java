@@ -1,13 +1,11 @@
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The car service: stores registered customers, cars, mechanics and orders
- * and creates new objects with unique identifiers.
- */
+
 public class Storage {
 
     private String name;
@@ -16,9 +14,9 @@ public class Storage {
     private final List<Mechanic> mechanics = new ArrayList<>();
     private final List<Order> orders = new ArrayList<>();
 
-    private long nextCustomerId = 1;
-    private long nextMechanicId = 1;
-    private long nextOrderId = 1;
+    private Long nextCustomerId = 1L;
+    private Long nextMechanicId = 1L;
+    private Long nextOrderId = 1L;
 
     public Storage(String name) {
         setName(name);
@@ -39,6 +37,16 @@ public class Storage {
         return customer;
     }
 
+    public CorporateCustomer registerCorporateCustomer(String companyName, String phone,
+                                                       BigDecimal laborDiscountPercent,
+                                                       BigDecimal partsDiscountPercent) {
+        CorporateCustomer customer = new CorporateCustomer(nextCustomerId, companyName, phone,
+                laborDiscountPercent, partsDiscountPercent);
+        nextCustomerId++;
+        customers.add(customer);
+        return customer;
+    }
+
     public Car registerCar(String vin, String make, String model, int year, Customer owner) {
         if (!customers.contains(owner)) {
             throw new IllegalArgumentException("The car owner is not registered in the service");
@@ -51,8 +59,8 @@ public class Storage {
         return car;
     }
 
-    public Mechanic hireMechanic(String fullName, String specialization) {
-        Mechanic mechanic = new Mechanic(nextMechanicId, fullName, specialization);
+    public Mechanic hireMechanic(String fullName, Specialization... specializations) {
+        Mechanic mechanic = new Mechanic(nextMechanicId, fullName, specializations);
         nextMechanicId++;
         mechanics.add(mechanic);
         return mechanic;

@@ -1,8 +1,6 @@
 import java.math.BigDecimal;
 
-/**
- * Demonstrates the model: positive and negative scenarios.
- */
+
 public class CarServiceDemo {
 
     public static void main(String[] args) {
@@ -19,8 +17,8 @@ public class CarServiceDemo {
         customer.setPhone("+380509876543");
         System.out.println("Customer phone changed: " + customer);
 
-        Mechanic oleh = storage.hireMechanic("Oleh Koval", "engine");
-        Mechanic andrii = storage.hireMechanic("Andrii Melnyk", "suspension");
+        Mechanic oleh = storage.hireMechanic("Oleh Koval", Specialization.ENGINE, Specialization.BRAKES);
+        Mechanic andrii = storage.hireMechanic("Andrii Melnyk", Specialization.SUSPENSION);
         System.out.println("Mechanics: " + oleh + ", " + andrii);
 
         expectError("Registering the same VIN again",
@@ -30,8 +28,8 @@ public class CarServiceDemo {
         Order order = storage.createOrder(car);
         printState(order);
 
-        order.addJob(new Job("Oil change", new BigDecimal("1200.00"), new BigDecimal("400.00")));
-        order.addJob(new Job("Brake pad replacement", new BigDecimal("1800.50"), new BigDecimal("650.00")));
+        order.addJob(new Job("Oil change", Specialization.ENGINE, new BigDecimal("1200.00"), new BigDecimal("400.00")));
+        order.addJob(new Job("Brake pad replacement", Specialization.BRAKES, new BigDecimal("1800.50"), new BigDecimal("650.00")));
         System.out.println("Added two jobs");
         printState(order);
 
@@ -68,11 +66,14 @@ public class CarServiceDemo {
 
         printHeader("5. Trying to start an order without a mechanic");
         Order noMechanicOrder = storage.createOrder(secondCar);
-        noMechanicOrder.addJob(new Job("Wheel alignment", BigDecimal.ZERO, new BigDecimal("700.00")));
+        noMechanicOrder.addJob(new Job("Wheel alignment", Specialization.SUSPENSION, BigDecimal.ZERO, new BigDecimal("700.00")));
         noMechanicOrder.diagnose();
         noMechanicOrder.approve();
         expectError("Starting without a mechanic", noMechanicOrder::start);
         printState(noMechanicOrder);
+
+        expectError("Assigning a mechanic without the needed specialization",
+                () -> noMechanicOrder.assignMechanic(oleh));
 
         printHeader("6. Trying to assign a busy mechanic");
         noMechanicOrder.assignMechanic(andrii);
@@ -83,7 +84,7 @@ public class CarServiceDemo {
 
         printHeader("7. Trying to change a completed order");
         expectError("Adding a job to a completed order",
-                () -> order.addJob(new Job("Car wash", BigDecimal.ZERO, new BigDecimal("200.00"))));
+                () -> order.addJob(new Job("Car wash", Specialization.WASHING, BigDecimal.ZERO, new BigDecimal("200.00"))));
         expectError("Cancelling a completed order", order::cancel);
         printState(order);
 
@@ -99,6 +100,21 @@ public class CarServiceDemo {
         emptyOrder.assignMechanic(andrii);
         System.out.println("Andrii assigned to order #" + emptyOrder.getId());
         printState(emptyOrder);
+
+        printHeader("10. Corporate customer with separate labor and parts discounts");
+        CorporateCustomer company = storage.registerCorporateCustomer("TransLogistics Ltd", "+380441112233",
+                new BigDecimal("10"), new BigDecimal("5"));
+        Car van = storage.registerCar("WV1ZZZ2KZAH000003", "Volkswagen", "Caddy", 2020, company);
+        System.out.println("Customer: " + company);
+        Order corporateOrder = storage.createOrder(van);
+        corporateOrder.addJob(new Job("Oil change", Specialization.ENGINE, new BigDecimal("1200.00"), new BigDecimal("400.00")));
+        corporateOrder.addJob(new Job("Brake pad replacement", Specialization.BRAKES, new BigDecimal("1800.50"), new BigDecimal("650.00")));
+        System.out.println("  Parts: " + corporateOrder.getPartsCost()
+                + ", discount -" + corporateOrder.getPartsDiscount());
+        System.out.println("  Labor: " + corporateOrder.getLaborCost()
+                + ", discount -" + corporateOrder.getLaborDiscount());
+        System.out.println("  Total to pay: " + corporateOrder.getTotalCost() + " UAH");
+        expectError("Discount above 100%", () -> company.setLaborDiscountPercent(new BigDecimal("120")));
 
         printHeader("All orders of service \"" + storage.getName() + "\"");
         for (Order o : storage.getOrders()) {

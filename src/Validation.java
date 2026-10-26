@@ -23,6 +23,14 @@ final class Validation {
         return value;
     }
 
+    static BigDecimal requirePercent(BigDecimal value, String fieldName) {
+        requireNonNegative(value, fieldName);
+        if (value.compareTo(new BigDecimal("100")) > 0) {
+            throw new IllegalArgumentException(fieldName + " must not exceed 100%: " + value);
+        }
+        return value;
+    }
+
     static <T> T requireNonNull(T value, String fieldName) {
         if (value == null) {
             throw new IllegalArgumentException(fieldName + " must not be null");

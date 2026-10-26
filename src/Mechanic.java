@@ -1,20 +1,20 @@
-import java.util.Objects;
+import java.util.*;
 
 
 public class Mechanic {
 
-    private final long id;
+    private final Long id;
     private String fullName;
-    private String specialization;
-    private Order currentOrder;
+    private Set<Specialization> specializations = new HashSet<>();
+    private boolean busy;
 
-    public Mechanic(long id, String fullName, String specialization) {
+    public Mechanic(Long id, String fullName, Specialization... specializations) {
         this.id = id;
         setFullName(fullName);
-        setSpecialization(specialization);
+        setSpecializations(specializations);
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -26,34 +26,39 @@ public class Mechanic {
         this.fullName = Validation.requireText(fullName, "Mechanic name");
     }
 
-    public String getSpecialization() {
-        return specialization;
+    public Set<Specialization> getSpecializations() {
+        return Collections.unmodifiableSet(specializations);
     }
 
-    public void setSpecialization(String specialization) {
-        this.specialization = Validation.requireText(specialization, "Specialization");
+    public void setSpecializations(Specialization... newSpecializations) {
+        if (newSpecializations == null || newSpecializations.length == 0) {
+            throw new IllegalArgumentException("Mechanic must have at least one specialization");
+        }
+        Set<Specialization> result = new HashSet<>();
+        for (Specialization s : newSpecializations) {
+            result.add(Validation.requireNonNull(s, "Specialization"));
+        }
+        specializations = result;
+    }
+
+    public boolean canDo(Job job) {
+        return specializations.contains(job.getSpecialization());
     }
 
     public boolean isBusy() {
-        return currentOrder != null;
+        return busy;
     }
 
-    /**
-     * Assigns the mechanic to an order. Called only from Order.
-     */
-    void occupy(Order order) {
-        if (isBusy()) {
-            throw new IllegalStateException("Mechanic " + fullName
-                    + " is already working on order #" + currentOrder.getId());
+    void occupy() {
+        if (busy) {
+            throw new IllegalStateException("Mechanic " + fullName + " is already busy with another order");
         }
-        currentOrder = order;
+        busy = true;
     }
 
-    /**
-     * Frees the mechanic after the order is completed or cancelled.
-     */
+
     void release() {
-        currentOrder = null;
+        busy = false;
     }
 
     @Override
@@ -65,7 +70,7 @@ public class Mechanic {
             return false;
         }
         Mechanic other = (Mechanic) o;
-        return id == other.id;
+        return id.equals(other.id);
     }
 
     @Override
@@ -75,6 +80,6 @@ public class Mechanic {
 
     @Override
     public String toString() {
-        return fullName + " (" + specialization + ")";
+        return fullName + " " + specializations;
     }
 }

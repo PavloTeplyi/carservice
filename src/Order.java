@@ -1,4 +1,5 @@
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,20 +8,20 @@ import java.util.Objects;
 
 public class Order {
 
-    private final long id;
+    private final Long id;
     private final Car car;
     private final List<Job> jobs = new ArrayList<>();
     private Mechanic mechanic;
     private OrderStatus status;
 
 
-    Order(long id, Car car) {
+    Order(Long id, Car car) {
         this.id = id;
         this.car = Validation.requireNonNull(car, "Car");
         this.status = OrderStatus.CREATED;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -47,6 +48,9 @@ public class Order {
         if (status != OrderStatus.CREATED && status != OrderStatus.DIAGNOSED) {
             throw new IllegalStateException("Jobs can be added only before approval, current status: " + status);
         }
+        if (mechanic != null) {
+            ensureCanDo(mechanic, job);
+        }
         jobs.add(job);
     }
 
@@ -71,7 +75,10 @@ public class Order {
         if (mechanic != null) {
             throw new IllegalStateException("Order #" + id + " already has mechanic " + mechanic.getFullName());
         }
-        newMechanic.occupy(this);
+        for (Job job : jobs) {
+            ensureCanDo(newMechanic, job);
+        }
+        newMechanic.occupy();
         mechanic = newMechanic;
     }
 
@@ -111,10 +118,34 @@ public class Order {
         releaseMechanic();
     }
 
-    public BigDecimal getTotalCost() {
+    public BigDecimal getPartsCost() {
         return jobs.stream()
-                .map(Job::getTotalCost)
+                .map(Job::getPartsCost)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getLaborCost() {
+        return jobs.stream()
+                .map(Job::getLaborCost)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getPartsDiscount() {
+        return discount(getPartsCost(), car.getOwner().getPartsDiscountPercent());
+    }
+
+    public BigDecimal getLaborDiscount() {
+        return discount(getLaborCost(), car.getOwner().getLaborDiscountPercent());
+    }
+
+    public BigDecimal getTotalCost() {
+        return getPartsCost().add(getLaborCost())
+                .subtract(getPartsDiscount())
+                .subtract(getLaborDiscount());
+    }
+
+    private static BigDecimal discount(BigDecimal amount, BigDecimal percent) {
+        return amount.multiply(percent).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
     }
 
     public boolean isActive() {
@@ -127,6 +158,13 @@ public class Order {
             throw new IllegalStateException("Forbidden status transition: " + status + " -> " + next);
         }
         status = next;
+    }
+
+    private void ensureCanDo(Mechanic m, Job job) {
+        if (!m.canDo(job)) {
+            throw new IllegalStateException("Mechanic " + m.getFullName() + " cannot do job \"" + job.getDescription()
+                    + "\": requires " + job.getSpecialization());
+        }
     }
 
     private void ensureNotClosed() {
@@ -150,7 +188,7 @@ public class Order {
             return false;
         }
         Order other = (Order) o;
-        return id == other.id;
+        return id.equals(other.id);
     }
 
     @Override

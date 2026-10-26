@@ -1,19 +1,20 @@
+import java.math.BigDecimal;
 import java.util.Objects;
 
 
 public class Customer {
 
-    private final long id;
+    private final Long id;
     private String fullName;
     private String phone;
 
-    public Customer(long id, String fullName, String phone) {
+    public Customer(Long id, String fullName, String phone) {
         this.id = id;
         setFullName(fullName);
         setPhone(phone);
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -33,6 +34,14 @@ public class Customer {
         this.phone = Validation.requireText(phone, "Customer phone");
     }
 
+    public BigDecimal getLaborDiscountPercent() {
+        return BigDecimal.ZERO;
+    }
+
+    public BigDecimal getPartsDiscountPercent() {
+        return BigDecimal.ZERO;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -42,7 +51,7 @@ public class Customer {
             return false;
         }
         Customer other = (Customer) o;
-        return id == other.id;
+        return id.equals(other.id);
     }
 
     @Override

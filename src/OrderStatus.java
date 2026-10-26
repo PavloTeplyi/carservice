@@ -1,9 +1,4 @@
-/**
- * Order statuses and the allowed transitions between them.
- *
- * CREATED -> DIAGNOSED -> APPROVED -> IN_PROGRESS -> COMPLETED
- * CREATED, DIAGNOSED, APPROVED -> CANCELLED
- */
+
 public enum OrderStatus {
 
     CREATED,

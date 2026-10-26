@@ -4,12 +4,13 @@ import java.math.BigDecimal;
 public class Job {
 
     private String description;
+    private final Specialization specialization;
     private final BigDecimal partsCost;
     private final BigDecimal laborCost;
     private boolean done;
 
-    public Job(String description, BigDecimal partsCost, BigDecimal laborCost) {
-        setDescription(description);
+    public Job(String description, Specialization specialization, BigDecimal partsCost, BigDecimal laborCost) {
+        setDescription(description);        this.specialization = Validation.requireNonNull(specialization, "Job specialization");
         this.partsCost = Validation.requireNonNegative(partsCost, "Parts cost");
         this.laborCost = Validation.requireNonNegative(laborCost, "Labor cost");
         this.done = false;
@@ -21,6 +22,10 @@ public class Job {
 
     public void setDescription(String description) {
         this.description = Validation.requireText(description, "Job description");
+    }
+
+    public Specialization getSpecialization() {
+        return specialization;
     }
 
     public BigDecimal getPartsCost() {
@@ -49,7 +54,7 @@ public class Job {
 
     @Override
     public String toString() {
-        return description
+        return description + " {" + specialization + "}"
                 + " [parts " + partsCost
                 + ", labor " + laborCost
                 + ", " + (done ? "done" : "not done") + "]";
